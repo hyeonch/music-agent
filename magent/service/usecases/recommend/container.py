@@ -1,5 +1,4 @@
 from dependency_injector import containers, providers
-from spotipy import Spotify
 
 from magent.adapters.repository.reccobeats import ReccobeatsRecommendationRepository
 from magent.adapters.repository.spotify import SpotifyArtistRepository
