@@ -1,12 +1,28 @@
 [project]
-name = "mmcp"
+name = "magent"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "dependency-injector>=4.48.2",
+    "fastapi>=0.117.1",
+    "httpx>=0.28.1",
+    "langchain-google-genai>=2.1.12",
+    "langgraph>=0.6.7",
+    "mcp>=1.15.0",
+    "pydantic>=2.11.9",
+    "pydantic-settings>=2.11.0",
+    "spotipy>=2.25.1",
+    "structlog>=25.4.0",
+]
 
-[tool.ruff]
+[dependency-groups]
+dev = [
+    "ruff>=0.13.2",
+]
+
+[ruff]
 exclude = [
     ".bzr",
     ".direnv",
@@ -39,42 +55,19 @@ line-length = 100
 indent-width = 4
 target-version = "py313"
 
-[tool.ruff.lint]
-select = ["E", "F", "N", "I", "W", "UP"]
-ignore = ["N812"]
-fixable = ["E", "F", "I"]
+[ruff.lint]
+select = ["E", "F", "N", "I", "W", "UP", "C901"]
+ignore = []
+fixable = ["E", "F", "N", "I", "W", "UP"]
 unfixable = []
 per-file-ignores = {}
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
-[tool.ruff.format]
-# Like Black, use double quotes for strings.
+[ruff.format]
 quote-style = "double"
-
-# Like Black, indent with spaces, rather than tabs.
 indent-style = "space"
-
-# Like Black, respect magic trailing commas.
 skip-magic-trailing-comma = false
 
-# Like Black, automatically detect the appropriate line ending.
 line-ending = "auto"
-
-# Enable auto-formatting of code examples in docstrings. Markdown,
-# reStructuredText code/literal blocks and doctests are all supported.
-#
-# This is currently disabled by default, but it is planned for this
-# to be opt-out in the future.
 docstring-code-format = false
-
-# Set the line length limit used when formatting code snippets in
-# docstrings.
-#
-# This only has an effect when the `docstring-code-format` setting is
-# enabled.
 docstring-code-line-length = "dynamic"
-
-[dependency-groups]
-dev = [
-    "ruff>=0.13.2",
-]
