@@ -1,0 +1,6 @@
+from typing import Protocol, Any
+
+
+class WorkflowOrchestrator(Protocol):
+    def run(self, query: Any) -> Any: ...
+    async def arun(self, query: Any) -> Any: ...

@@ -1,6 +1,5 @@
 from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends
-from langchain_core.messages import HumanMessage
 from pydantic import BaseModel
 
 from magent.container import AppContainer
@@ -16,6 +15,6 @@ class ChatOut(BaseModel):
 
 @router.post("/", response_model=ChatOut)
 @inject
-async def chat(body: ChatIn, graph=Depends(Provide[AppContainer.graph.graph])):
-    result = await graph.ainvoke({"messages": [HumanMessage(content=body.text)]})
-    return ChatOut(answer=result["messages"][-1].content)
+async def chat(body: ChatIn, orchestrator=Depends(Provide[AppContainer.workflow.orchestrator])):
+    result = await orchestrator.arun(body.text)
+    return ChatOut(answer=result)

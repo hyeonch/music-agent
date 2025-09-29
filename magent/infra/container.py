@@ -15,8 +15,3 @@ class InfraContainer(containers.DeclarativeContainer):
         client_secret=settings.SPOTIFY_CLIENT_SECRET,
     )
 
-    llm: BaseChatModel = providers.Singleton(
-        ChatGoogleGenerativeAI,
-        model=settings.MODEL_NAME,
-        google_api_key=settings.GOOGLE_API_KEY,
-    )
