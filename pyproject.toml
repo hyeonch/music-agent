@@ -12,6 +12,8 @@ dependencies = [
     "langgraph>=0.6.7",
     "mcp>=1.15.0",
     "pydantic>=2.11.9",
+    "pydantic-ai>=1.0.10",
+    "pydantic-graph>=1.0.10",
     "pydantic-settings>=2.11.0",
     "structlog>=25.4.0",
 ]
