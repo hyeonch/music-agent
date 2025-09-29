@@ -4,7 +4,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 
 from magent.adapters.workflow.langgraph.graph import LangGraphOrchestrator, custom_react
 from magent.adapters.workflow.langgraph.prompts import react_agent_prompt
-from magent.adapters.workflow.langgraph import make_tools
+from magent.adapters.workflow.langgraph.tools import make_tools
 from magent.service.graph.settings import GraphSettings
 from magent.service.usecases.recommend.recommend import RecommendationService
 
