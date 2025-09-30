@@ -5,8 +5,14 @@ from pydantic import BaseModel
 from magent.domain.meta import Track
 
 
-class RecommendRequest(BaseModel):
+class RecommendByArtistRequest(BaseModel):
     artist_name: str
+    limit: int = 10
+
+
+class RecommendByTrackRequest(BaseModel):
+    artist_name: str | None = None
+    track_title: str
     limit: int = 10
 
 

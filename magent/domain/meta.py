@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 class MusicServiceId(BaseModel):
     id: str
-    service: Literal["spotify", "reccobeats"]
+    service: Literal["spotify", "reccobeats", "musicbrainz"]
 
 class Artist(BaseModel):
     id: MusicServiceId

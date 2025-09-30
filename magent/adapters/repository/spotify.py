@@ -1,3 +1,5 @@
+import base64
+import time
 from functools import wraps
 from typing import Callable, Awaitable
 
@@ -5,7 +7,6 @@ import httpx
 
 from magent.domain.meta import Artist, Track, Query, MusicServiceId
 from magent.domain.repository import ArtistRepository
-from magent.infra.spotify import SpotifyAuth
 
 """
 https://developer.spotify.com/documentation/web-api
@@ -13,6 +14,42 @@ https://developer.spotify.com/documentation/web-api
 SERVICE = "spotify"
 BASE_URL = "https://api.spotify.com"
 MARKET = "KR"
+
+
+class SpotifyAuth:
+    OAUTH_TOKEN_URL = "https://accounts.spotify.com/api/token"
+
+    def __init__(self, client_id: str, client_secret: str):
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.token = None
+        self.expires_at = 0
+
+    async def get_token(self) -> str:
+        if not self.token or self.is_expired():
+            self.token, self.expires_at = await self._fetch_token()
+        return self.token
+
+    async def is_expired(self):
+        return time.time() >= self.expires_at
+
+    async def _fetch_token(self) -> tuple[str, float]:
+        auth = base64.b64encode(
+            f"{self.client_id}:{self.client_secret}".encode()
+        ).decode()
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                "https://accounts.spotify.com/api/token",
+                headers={"Authorization": f"Basic {auth}"},
+                data={"grant_type": "client_credentials"},
+            )
+        resp.raise_for_status()
+        data = resp.json()
+        return data["access_token"], time.time() + data["expires_in"] - 30
+
+    async def get_auth_header(self) -> dict[str, str]:
+        token = await self.get_token()
+        return {"Authorization": f"Bearer {token}"}
 
 
 def with_auth(func: Callable[..., Awaitable]):
@@ -26,8 +63,8 @@ def with_auth(func: Callable[..., Awaitable]):
 
 
 class SpotifySearchRepository:
-    def __init__(self, auth: SpotifyAuth):
-        self.auth = auth
+    def __init__(self, client_id: str, client_secret: str):
+        self.auth = SpotifyAuth(client_id, client_secret)
 
     @with_auth
     async def search(
@@ -52,9 +89,9 @@ class SpotifySearchRepository:
 class SpotifyArtistRepository(ArtistRepository):
     type_ = "artist"
 
-    def __init__(self, auth: SpotifyAuth):
-        self.auth = auth
-        self.search_repo = SpotifySearchRepository(auth)
+    def __init__(self, client_id: str, client_secret: str):
+        self.auth = SpotifyAuth(client_id, client_secret)
+        self.search_repo = SpotifySearchRepository(client_id, client_secret)
 
     async def search_artist(self, name: str) -> Artist:
         results = await self.search_repo.search(
