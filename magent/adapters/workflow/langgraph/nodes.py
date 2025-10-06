@@ -1,12 +1,11 @@
-from langchain_core.messages import AIMessage, BaseMessage
+from langchain_core.messages import AIMessage, BaseMessage, ToolMessage
 from langchain_core.runnables import Runnable
-from langchain_core.stores import BaseStore
+from langchain_core.tools import BaseTool
 from langgraph.constants import END
-from langgraph.prebuilt import ToolNode
-from langgraph.prebuilt.chat_agent_executor import AgentStatePydantic as AgentState
 from langgraph.types import Send
 
-from magent.logger import logger
+from magent.adapters.workflow.langgraph.states import AgentState
+from magent.service.trace.tracer import trace
 
 
 def make_agent_node(llm: Runnable):
@@ -15,34 +14,78 @@ def make_agent_node(llm: Runnable):
         if state.remaining_steps < 2 and has_tool_calls:
             return True
         return False
-    
-    async def agent_node(state: AgentState):
-        logger.info("llm_node.start", messages=state.messages[-1])
+
+    @trace(name="agent_node", as_type="node")
+    async def agent_node(state: AgentState) -> AgentState:
         response = await llm.ainvoke(state.messages)
-        logger.info("llm_node.end", response=str(response))
         if _are_more_steps_needed(state, response):
-            return {
-                "messages": [
-                    AIMessage(
-                        id=response.id,
-                        content="Sorry, need more steps to process this request.",
-                    )
-                ]
-            }
-        return {"messages": [response]}
+            response = AIMessage(
+                id=response.id,
+                content="Sorry, need more steps to process this request.",
+            )
+        return AgentState(messages=state.messages + [response])
 
     return agent_node
 
 
-def make_should_continue(tool_node: ToolNode, store: BaseStore | None = None):
+def make_conditional_router():
+    @trace(name="should_continue", as_type="edge")
     def should_continue(state: AgentState):
         last_msg = state.messages[-1]
         if isinstance(last_msg, AIMessage) and last_msg.tool_calls:
-            tool_calls = [
-                tool_node.inject_tool_args(call, state, store)
-                for call in last_msg.tool_calls
-            ]
-            return [Send("tools", [tool_call]) for tool_call in tool_calls]
+            return Send("tools", state)
         return END
 
     return should_continue
+
+
+def make_tool_node(tools: list[BaseTool]):
+    tool_map = {tool.name: tool for tool in tools}
+
+    @trace(name="tool_node", as_type="node")
+    async def tool_node(state: AgentState) -> AgentState:
+        last_msg = state.messages[-1]
+        results = []
+
+        for call in last_msg.tool_calls:
+            tool_name = call.get("name")
+            args = call.get("args", {})
+            tool_id = call.get("id")
+
+            tool = tool_map.get(tool_name)
+            if tool is None:
+                results.append(
+                    ToolMessage(
+                        content=f"Tool `{tool_name}` not found.",
+                        tool_call_id=tool_id,
+                    )
+                )
+                continue
+
+            try:
+                if hasattr(tool, "arun"):
+                    result = await tool.arun(args)
+                elif hasattr(tool, "ainvoke"):
+                    result = await tool.ainvoke(args)
+                elif hasattr(tool, "invoke"):
+                    result = tool.invoke(args)
+                else:
+                    result = tool.run(args)
+
+                results.append(
+                    ToolMessage(
+                        content=str(result.model_dump_json()),
+                        tool_call_id=tool_id,
+                    )
+                )
+
+            except Exception as e:
+                results.append(
+                    ToolMessage(
+                        content=f"Error in `{tool_name}`: {e}",
+                        tool_call_id=tool_id,
+                    )
+                )
+        return AgentState(messages=state.messages + results)
+
+    return tool_node

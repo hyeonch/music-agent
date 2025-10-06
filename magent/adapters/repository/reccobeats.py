@@ -4,9 +4,12 @@ from magent.domain.meta import (
     RecommendationCriteria,
     AudioFeatures,
     Track,
-    Artist, MusicServiceId,
+    Artist,
+    MusicServiceId,
 )
 from magent.domain.repository import RecommendationRepository
+
+from magent.service.trace.tracer import trace
 
 """
 https://reccobeats.com/docs/apis/reccobeats-api
@@ -20,6 +23,7 @@ class ReccobeatsRecommendationRepository(RecommendationRepository):
     def __init__(self, base_url: str = BASE_URL):
         self.base_url = base_url
 
+    @trace(name="repository.reccobeats.recommend", as_type="tool")
     async def recommend(
         self,
         criteria: RecommendationCriteria,

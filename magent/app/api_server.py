@@ -1,15 +1,20 @@
 import sys
 
 from fastapi import FastAPI
+from langfuse import Langfuse
 
+from magent.adapters.trace.langfuse import LangfuseTracer
+from magent.app.api.entrypoints import router as chat_router
 from magent.container import AppContainer
+from magent.service.trace.tracer import set_tracer
 from magent.settings import settings
 
-from magent.app.api.entrypoints import router as chat_router
-
 API_PREFIX = "/api"
+
+
 def _add_routers(app_: FastAPI):
     app_.include_router(chat_router, prefix=f"{API_PREFIX}/chat", tags=["chat"])
+
 
 def create_app(container_: AppContainer) -> FastAPI:
     app_ = FastAPI(
@@ -24,6 +29,15 @@ def create_app(container_: AppContainer) -> FastAPI:
     return app_
 
 
+set_tracer(
+    LangfuseTracer(
+        Langfuse(
+            public_key=settings.LANGFUSE_PUBLIC_KEY,
+            secret_key=settings.LANGFUSE_SECRET_KEY,
+            host=settings.LANGFUSE_HOST,
+        )
+    )
+)
 container = AppContainer()
 container.settings.from_pydantic(settings)
 container.wire(packages=[sys.modules["magent.app.api.entrypoints"]])
@@ -31,5 +45,5 @@ app = create_app(container)
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(app, host="127.0.0.1", port=8000)

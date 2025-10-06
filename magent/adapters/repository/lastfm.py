@@ -3,6 +3,8 @@ import httpx
 from magent.domain.meta import Artist, MusicServiceId, Track
 from magent.domain.repository import TrackRepository
 
+from magent.service.trace.tracer import trace
+
 """
 https://www.last.fm/api
 """
@@ -15,6 +17,7 @@ class LastFmTrackRepository(TrackRepository):
     def __init__(self, api_key: str):
         self.api_key = api_key
 
+    @trace(name="repo.lastfm.search_track", as_type="tool")
     async def search_track(self, title: str, artist: str | None = None) -> Track:
         params = {
             "method": "track.search",
@@ -43,6 +46,7 @@ class LastFmTrackRepository(TrackRepository):
             )
             return track
 
+    @trace(name="repo.lastfm.get_similar_tracks", as_type="tool")
     async def get_similar_tracks(self, track: Track, limit: int = 10) -> list[Track]:
         params = {
             "method": "track.getsimilar",

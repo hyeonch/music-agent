@@ -7,6 +7,7 @@ import httpx
 
 from magent.domain.meta import Artist, Track, Query, MusicServiceId
 from magent.domain.repository import ArtistRepository
+from magent.service.trace.tracer import trace
 
 """
 https://developer.spotify.com/documentation/web-api
@@ -67,6 +68,7 @@ class SpotifySearchRepository:
         self.auth = SpotifyAuth(client_id, client_secret)
 
     @with_auth
+    @trace(name="repository.spotify.search", as_type="tool")
     async def search(
         self, query: Query, type_: str, limit: int = 10, headers: dict = None
     ) -> dict:
@@ -103,8 +105,9 @@ class SpotifyArtistRepository(ArtistRepository):
         )
 
     @with_auth
+    @trace(name="repository.spotify.get_artist_top_tracks", as_type="tool")
     async def get_artist_top_tracks(
-        self, artist: Artist, headers: dict = None
+        self, artist: Artist, limit: int = 5, headers: dict = None
     ) -> list[Track]:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
@@ -114,6 +117,14 @@ class SpotifyArtistRepository(ArtistRepository):
             )
             resp.raise_for_status()
             data = resp.json()
+
+        if not (tracks_data := data.get("tracks", [])) or not isinstance(
+            tracks_data, list
+        ):
+            return []
+
+        limit = min(limit, len(tracks_data))
+
         return [
             Track(
                 id=MusicServiceId(id=t["id"], service=SERVICE),
@@ -123,9 +134,9 @@ class SpotifyArtistRepository(ArtistRepository):
                         id=MusicServiceId(id=a["id"], service=SERVICE),
                         name=a["name"],
                     )
-                    for a in t["artists"]
+                    for a in t.get("artists", [])
                 ],
-                url=t["external_urls"]["spotify"],
+                url=t.get("external_urls", {}).get("spotify"),
             )
-            for t in data["tracks"]
+            for t in tracks_data[:limit]
         ]
