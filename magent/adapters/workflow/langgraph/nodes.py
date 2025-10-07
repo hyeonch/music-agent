@@ -23,7 +23,7 @@ def make_agent_node(llm: Runnable):
                 id=response.id,
                 content="Sorry, need more steps to process this request.",
             )
-        return AgentState(messages=state.messages + [response])
+        return state.add_messages([response])
 
     return agent_node
 
@@ -86,6 +86,6 @@ def make_tool_node(tools: list[BaseTool]):
                         tool_call_id=tool_id,
                     )
                 )
-        return AgentState(messages=state.messages + results)
+        return state.add_messages(results)
 
     return tool_node

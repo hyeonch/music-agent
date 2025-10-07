@@ -24,8 +24,11 @@ class LangGraphOrchestrator(WorkflowOrchestrator):
     def __init__(self, graph: CompiledStateGraph):
         self.graph = graph
 
+    @trace(name="orchestrator", as_type="agent")
     def run(self, user_id: str, session_id: str, query: str, meta: dict[str, Any]):
-        results = self.graph.invoke(AgentState(messages=[HumanMessage(content=query)]))
+        results = self.graph.invoke(
+            AgentState(messages=[HumanMessage(content=query)], metadata=meta)
+        )
         return results["messages"][-1].content
 
     @trace(name="orchestrator", as_type="agent")
@@ -33,7 +36,7 @@ class LangGraphOrchestrator(WorkflowOrchestrator):
         self, user_id: str, session_id: str, query: str, meta: dict[str, Any]
     ):
         results = await self.graph.ainvoke(
-            AgentState(messages=[HumanMessage(content=query)])
+            AgentState(messages=[HumanMessage(content=query)], metadata=meta)
         )
         answer = results["messages"][-1].content
         return answer
