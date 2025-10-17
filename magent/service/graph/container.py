@@ -20,7 +20,7 @@ class LangGraphContainer(containers.DeclarativeContainer):
     llm: BaseChatModel = providers.Singleton(
         ChatGoogleGenerativeAI,
         model=settings.MODEL_NAME,
-        google_api_key=settings.GOOGLE_API_KEY,
+        api_key=settings.API_KEY,
     )
 
     recommendation = providers.Dependency(RecommendationService)
