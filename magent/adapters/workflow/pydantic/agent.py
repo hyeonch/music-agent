@@ -20,6 +20,7 @@ class RecommendationDeps:
 def create_recommendation_agent(
     model: Model,
 ) -> Agent[RecommendationDeps, RecommendResponse]:
+    Agent.instrument_all()
     recommendation_agent = Agent[RecommendationDeps, RecommendResponse](
         model=model,
         system_prompt=RECOMMENDATION_AGENT_SYSTEM_PROMPT,

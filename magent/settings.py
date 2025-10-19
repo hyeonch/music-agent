@@ -10,13 +10,16 @@ class Settings(BaseSettings):
     LOG_DIR: str = "logs"
     LOG_LEVEL: int = logging.INFO
 
-    # Langfuse settings (legacy)
+    TRACER: str = ""
+
+    # Langfuse settings
     LANGFUSE_HOST: str = ""
     LANGFUSE_PUBLIC_KEY: str = ""
     LANGFUSE_SECRET_KEY: str = ""
 
     # Opik settings
     OPIK_HOST: str = ""
+    OTEL_EXPORTER_OTLP_ENDPOINT: str = ""
 
     graph: GraphSettings = GraphSettings()
     use_case: UseCaseSettings = UseCaseSettings()

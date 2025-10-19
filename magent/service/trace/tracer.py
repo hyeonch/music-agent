@@ -1,9 +1,9 @@
 import inspect
 from abc import ABC, abstractmethod
 from functools import wraps
-
 from typing import Callable, TypeVar, Any
 
+from magent.settings import settings
 
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -18,7 +18,31 @@ class Tracer(ABC):
         raise NotImplementedError
 
 
-def set_tracer(tracer: Tracer):
+def set_tracer():
+    if settings.TRACER == "opik":
+        from opik import Opik
+        from magent.adapters.trace.opik import OpikTracer
+
+        tracer = OpikTracer(
+            Opik(
+                project_name="magent",
+                host=settings.OPIK_HOST,
+            )
+        )
+    elif settings.TRACER == "langfuse":
+        from langfuse import Langfuse
+        from magent.adapters.trace.langfuse import LangfuseTracer
+
+        tracer = LangfuseTracer(
+            Langfuse(
+                public_key=settings.LANGFUSE_PUBLIC_KEY,
+                secret_key=settings.LANGFUSE_SECRET_KEY,
+                host=settings.LANGFUSE_HOST,
+            )
+        )
+    else:
+        tracer = None
+
     global _tracer_instance
     _tracer_instance = tracer
 

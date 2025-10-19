@@ -1,6 +1,6 @@
 from dependency_injector import providers, containers
 
-from magent.service.graph.container import PydanticGraphContainer
+from magent.service.graph.container import LangGraphContainer
 from magent.service.usecases.container import UseCaseContainer
 from magent.settings import Settings
 
@@ -13,14 +13,14 @@ class AppContainer(containers.DeclarativeContainer):
         settings=settings.use_case,
     )
 
-    # workflow: LangGraphContainer = providers.Container(
-    #     LangGraphContainer,
-    #     settings=settings.graph,
-    #     recommendation=use_case.recommendation,
-    # )
-
-    workflow: PydanticGraphContainer = providers.Container(
-        PydanticGraphContainer,
+    workflow: LangGraphContainer = providers.Container(
+        LangGraphContainer,
         settings=settings.graph,
         recommendation=use_case.recommendation,
     )
+
+    # workflow: PydanticGraphContainer = providers.Container(
+    #     PydanticGraphContainer,
+    #     settings=settings.graph,
+    #     recommendation=use_case.recommendation,
+    # )

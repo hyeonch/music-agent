@@ -11,7 +11,7 @@ from magent.adapters.workflow.langgraph.graph import (
 from magent.adapters.workflow.langgraph.prompts import react_agent_prompt
 from magent.adapters.workflow.langgraph.tools import make_tools
 from magent.adapters.workflow.pydantic.agent import create_recommendation_agent
-from magent.adapters.workflow.pydantic.graph import PydanticGraphOrchestrator
+from magent.adapters.workflow.pydantic.orchestrator import PydanticGraphOrchestrator
 from magent.service.graph.settings import GraphSettings
 from magent.service.usecases.recommend.recommend import RecommendationService
 

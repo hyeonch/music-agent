@@ -17,14 +17,13 @@ from magent.adapters.workflow.langgraph.nodes import (
 )
 from magent.adapters.workflow.langgraph.states import AgentState
 from magent.service.graph.workflow import WorkflowOrchestrator
-from magent.service.trace.tracer import trace, get_tracer
+from magent.service.trace.tracer import get_tracer, trace
 
 
 class LangGraphOrchestrator(WorkflowOrchestrator):
     def __init__(self, graph: CompiledStateGraph):
         self.graph = graph
 
-    @trace(name="orchestrator")
     def run(self, user_id: str, session_id: str, query: str, meta: dict[str, Any]):
         callbacks = get_tracer().callbacks(graph=self.graph)
         results = self.graph.invoke(
@@ -40,7 +39,7 @@ class LangGraphOrchestrator(WorkflowOrchestrator):
         callbacks = get_tracer().callbacks(graph=self.graph)
         results = await self.graph.ainvoke(
             AgentState(messages=[HumanMessage(content=query)], metadata=meta),
-            config={"callbacks": callbacks},
+            config={"callbacks": callbacks, "configurable": {"thread_id": session_id}},
         )
         answer = results["messages"][-1].content
         return answer

@@ -5,6 +5,7 @@ from langgraph.constants import END
 from langgraph.types import Send
 
 from magent.adapters.workflow.langgraph.states import AgentState
+from magent.service.trace.tracer import trace
 
 
 def make_agent_node(llm: Runnable):
@@ -39,6 +40,7 @@ def make_conditional_router():
 def make_tool_node(tools: list[BaseTool]):
     tool_map = {tool.name: tool for tool in tools}
 
+    @trace(name="tool_node", as_type="tool")
     async def tool_node(state: AgentState) -> AgentState:
         last_msg = state.messages[-1]
         results = []

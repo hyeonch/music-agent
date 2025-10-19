@@ -16,11 +16,15 @@ class OpikTracer(Tracer):
             return track(
                 name=name,
                 type=as_type,
+                project_name="magent",
             )(func)
 
         return decorator
 
     def callbacks(self, *args, **kwargs) -> list[OpikCallbackHandler]:
         graph: CompiledStateGraph = kwargs.get("graph")
-        handler = OpikCallbackHandler(graph=graph.get_graph(xray=True))
+        handler = OpikCallbackHandler(
+            graph=graph.get_graph(xray=True),
+            project_name="magent",
+        )
         return [handler]
