@@ -26,8 +26,10 @@ class LangGraphOrchestrator(WorkflowOrchestrator):
 
     @trace(name="orchestrator")
     def run(self, user_id: str, session_id: str, query: str, meta: dict[str, Any]):
+        callbacks = get_tracer().callbacks(graph=self.graph)
         results = self.graph.invoke(
-            AgentState(messages=[HumanMessage(content=query)], metadata=meta)
+            AgentState(messages=[HumanMessage(content=query)], metadata=meta),
+            config={"callbacks": callbacks},
         )
         return results["messages"][-1].content
 
@@ -35,8 +37,10 @@ class LangGraphOrchestrator(WorkflowOrchestrator):
     async def arun(
         self, user_id: str, session_id: str, query: str, meta: dict[str, Any]
     ):
+        callbacks = get_tracer().callbacks(graph=self.graph)
         results = await self.graph.ainvoke(
-            AgentState(messages=[HumanMessage(content=query)], metadata=meta)
+            AgentState(messages=[HumanMessage(content=query)], metadata=meta),
+            config={"callbacks": callbacks},
         )
         answer = results["messages"][-1].content
         return answer
@@ -47,9 +51,7 @@ def custom_react(
     tools: list[BaseTool],
     prompt: ChatPromptTemplate,
 ):
-    tracer = get_tracer()
     llm = prompt | llm.bind_tools(tools)
-    llm = llm.with_config(callbacks=[tracer.callback()])
     graph = StateGraph(AgentState)
 
     agent_node = make_agent_node(llm)
@@ -74,7 +76,4 @@ def prebuilt_react(
     tools: list[BaseTool],
     prompt: ChatPromptTemplate,
 ):
-    tracer = get_tracer()
-    return create_react_agent(
-        llm.with_config(callbacks=[tracer.callback()]), tools, prompt=prompt
-    )
+    return create_react_agent(llm, tools, prompt=prompt)

@@ -18,5 +18,5 @@ class LangfuseTracer(Tracer):
 
         return decorator
 
-    def callback(self, *args, **kwargs):
-        return CallbackHandler(*args, **kwargs)
+    def callbacks(self, *args, **kwargs):
+        return [CallbackHandler()]

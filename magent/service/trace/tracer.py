@@ -10,11 +10,11 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 class Tracer(ABC):
     @abstractmethod
-    def trace(self, name: str, as_type: str) -> Callable[[F], F]:
+    def trace(self, name: str, as_type: str = "") -> Callable[[F], F]:
         raise NotImplementedError
 
     @abstractmethod
-    def callback(self, *args, **kwargs) -> Any:
+    def callbacks(self, *args, **kwargs) -> Any:
         raise NotImplementedError
 
 
@@ -29,14 +29,15 @@ def get_tracer() -> Tracer:
     return _tracer_instance
 
 
-def trace(name: str, as_type: str = "default") -> Callable[[F], F]:
+def trace(name: str, as_type: str | None = None) -> Callable[[F], F]:
     def decorator(func: F) -> F:
+        trace_kwargs = {} if as_type is None else {"as_type": as_type}
         if inspect.iscoroutinefunction(func):
 
             @wraps(func)
             async def async_wrapper(*args, **kwargs):
                 tracer = get_tracer()
-                wrapped = tracer.trace(name, as_type)(func)
+                wrapped = tracer.trace(name, **trace_kwargs)(func)
                 return await wrapped(*args, **kwargs)
 
             return async_wrapper
@@ -45,7 +46,7 @@ def trace(name: str, as_type: str = "default") -> Callable[[F], F]:
             @wraps(func)
             def sync_wrapper(*args, **kwargs):
                 tracer = get_tracer()
-                wrapped = tracer.trace(name, as_type)(func)
+                wrapped = tracer.trace(name, **trace_kwargs)(func)
                 return wrapped(*args, **kwargs)
 
             return sync_wrapper
