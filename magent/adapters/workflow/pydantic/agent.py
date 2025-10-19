@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from pydantic_ai import Agent, RunContext
+from pydantic_ai.models import Model
 
 from magent.adapters.workflow.pydantic.prompts import RECOMMENDATION_AGENT_SYSTEM_PROMPT
 from magent.service.usecases.recommend.dto import (
@@ -17,10 +18,10 @@ class RecommendationDeps:
 
 
 def create_recommendation_agent(
-    model_name: str,
+    model: Model,
 ) -> Agent[RecommendationDeps, RecommendResponse]:
     recommendation_agent = Agent[RecommendationDeps, RecommendResponse](
-        model=model_name,
+        model=model,
         system_prompt=RECOMMENDATION_AGENT_SYSTEM_PROMPT,
         instrument=True,
     )

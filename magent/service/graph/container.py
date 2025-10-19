@@ -1,6 +1,8 @@
 from dependency_injector import containers, providers
 from langchain_core.language_models import BaseChatModel
 from langchain_google_genai import ChatGoogleGenerativeAI
+from pydantic_ai.models.google import GoogleModel
+from pydantic_ai.providers.google import GoogleProvider
 
 from magent.adapters.workflow.langgraph.graph import (
     LangGraphOrchestrator,
@@ -43,9 +45,12 @@ class LangGraphContainer(containers.DeclarativeContainer):
 class PydanticGraphContainer(containers.DeclarativeContainer):
     settings: GraphSettings = providers.Configuration()
     recommendation = providers.Dependency(RecommendationService)
-    agent = providers.Factory(
-        create_recommendation_agent, model_name=settings.MODEL_NAME
+
+    provider = providers.Singleton(GoogleProvider, api_key=settings.API_KEY)
+    llm = providers.Singleton(
+        GoogleModel, model_name=settings.MODEL_NAME, provider=provider
     )
+    agent = providers.Factory(create_recommendation_agent, model=llm)
 
     orchestrator = providers.Factory(
         PydanticGraphOrchestrator, agent=agent, recommendation=recommendation
