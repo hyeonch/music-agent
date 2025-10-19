@@ -19,7 +19,7 @@ class PydanticGraphOrchestrator(WorkflowOrchestrator):
 
         return asyncio.run(self.arun(user_id, session_id, query, meta))
 
-    @trace(name="orchestrator", as_type="agent")
+    @trace(name="orchestrator")
     async def arun(
         self, user_id: str, session_id: str, query: str, meta: dict[str, Any]
     ) -> str:

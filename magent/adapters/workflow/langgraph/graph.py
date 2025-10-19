@@ -24,14 +24,14 @@ class LangGraphOrchestrator(WorkflowOrchestrator):
     def __init__(self, graph: CompiledStateGraph):
         self.graph = graph
 
-    @trace(name="orchestrator", as_type="agent")
+    @trace(name="orchestrator")
     def run(self, user_id: str, session_id: str, query: str, meta: dict[str, Any]):
         results = self.graph.invoke(
             AgentState(messages=[HumanMessage(content=query)], metadata=meta)
         )
         return results["messages"][-1].content
 
-    @trace(name="orchestrator", as_type="agent")
+    @trace(name="orchestrator")
     async def arun(
         self, user_id: str, session_id: str, query: str, meta: dict[str, Any]
     ):

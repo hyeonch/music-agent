@@ -9,11 +9,11 @@ class LangfuseTracer(Tracer):
     def __init__(self, client: Langfuse):
         self.client = client
 
-    def trace(self, name: str, as_type: str):
+    def trace(self, name: str, as_type: str = "span"):
         def decorator(func):
             return observe(
                 name=name,
-                as_type="span" if as_type in ("edge", "node") else as_type,
+                as_type=as_type,
             )(func)
 
         return decorator

@@ -29,7 +29,7 @@ def get_tracer() -> Tracer:
     return _tracer_instance
 
 
-def trace(name: str, as_type: str) -> Callable[[F], F]:
+def trace(name: str, as_type: str = "default") -> Callable[[F], F]:
     def decorator(func: F) -> F:
         if inspect.iscoroutinefunction(func):
 
